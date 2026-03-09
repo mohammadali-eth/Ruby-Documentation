@@ -162,3 +162,56 @@ puts "The hash with the city key removed is: #{my_hash.reject { |key, value| key
 puts "The hash with the name key updated is: #{my_hash.merge({"name" => "Ahmed"})}" # Using merge method to get a new hash with the name key updated.
 puts "The hash with the age key updated is: #{my_hash.merge({"age" => 30})}" # Using merge method to get a new hash with the age key updated.
 puts "The hash with the city key updated is: #{my_hash.merge({"city" => "Ahmedabad"})}" # Using merge method to get a new hash with the city key updated.  
+
+# Control flow in Ruby
+# If statement
+character_age = 25
+if character_age < 18
+    puts "You are a minor."
+elsif character_age >= 18 && character_age < 65
+    puts "You are an adult."
+else 
+    puts "You are a senior citizen."
+end
+
+# Ternary statement
+var = 10
+ result = var > 5 ? "Greater than 5" : "Less than or equal to 5"
+ puts result
+
+# Loop Statements
+# While loop
+counter = 0
+while counter < 5
+    puts "Counter: #{counter}"
+    counter += 1
+end
+
+x = 4
+while x >= 1
+    puts "x: #{x}"
+    #Revers counting
+    x = x - 1
+end
+
+#For Loop
+x = 1
+for i in 1..5
+    puts "x: #{x}"
+    x = x + 1
+end
+
+#For Loop with array
+my_array = ["Ali", "Hasan", "Hussain", "Ahmed", "Sara"]
+for friend in my_array do
+    puts friend
+end
+
+#Do While Loop
+counter = 0
+begin
+    puts "Counter: #{counter}"
+    counter += 1
+rescue 
+    puts "An error occurred: #{$!}"
+end while counter < 5
