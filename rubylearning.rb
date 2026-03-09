@@ -194,6 +194,15 @@ while x >= 1
     x = x - 1
 end
 
+#Do While Loop
+counter = 0
+begin
+    puts "Counter: #{counter}"
+    counter += 1
+rescue 
+    puts "An error occurred: #{$!}"
+end while counter < 5
+
 #For Loop
 x = 1
 for i in 1..5
@@ -207,11 +216,23 @@ for friend in my_array do
     puts friend
 end
 
-#Do While Loop
+
+
+# Until Loop
 counter = 0
-begin
+until counter >= 5
     puts "Counter: #{counter}"
     counter += 1
-rescue 
-    puts "An error occurred: #{$!}"
-end while counter < 5
+end
+
+# Case Statement
+day = "This is Case statement example"
+case 
+when day.match(/\d/)
+    puts "String contains number"
+when day.match(/[a-zA-Z]/)
+    puts "String contains letters"
+else 
+    puts "String does not contain numbers & letters"
+end
+
