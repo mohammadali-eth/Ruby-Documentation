@@ -740,10 +740,508 @@ end
 puts ""
 
 # ==========================================
+# 22. PROJECT CREATION AND STRUCTURE
+# ==========================================
+# Ruby projects can be organized in various ways depending on their purpose.
+
+puts "=== 22. PROJECT CREATION AND STRUCTURE ==="
+
+# Example project structure creation
+def create_project_structure(project_name, type = :script)
+  puts "Creating #{type} project: #{project_name}"
+
+  case type
+  when :script
+    puts "Simple script project structure:"
+    puts "#{project_name}/"
+    puts "├── #{project_name}.rb"
+    puts "└── README.md"
+
+  when :gem
+    puts "Ruby gem project structure:"
+    puts "#{project_name}/"
+    puts "├── lib/"
+    puts "│   └── #{project_name}.rb"
+    puts "├── #{project_name}.gemspec"
+    puts "├── Gemfile"
+    puts "├── Rakefile"
+    puts "└── README.md"
+
+  when :rails
+    puts "Rails application structure:"
+    puts "#{project_name}/"
+    puts "├── app/"
+    puts "│   ├── controllers/"
+    puts "│   ├── models/"
+    puts "│   ├── views/"
+    puts "│   └── assets/"
+    puts "├── config/"
+    puts "├── db/"
+    puts "├── Gemfile"
+    puts "└── README.md"
+
+  when :sinatra
+    puts "Sinatra web app structure:"
+    puts "#{project_name}/"
+    puts "├── app.rb"
+    puts "├── views/"
+    puts "├── public/"
+    puts "├── Gemfile"
+    puts "└── README.md"
+  end
+end
+
+create_project_structure("my_script", :script)
+puts ""
+create_project_structure("my_gem", :gem)
+puts ""
+create_project_structure("my_rails_app", :rails)
+puts ""
+
+# ==========================================
+# 23. DATABASE INTEGRATION
+# ==========================================
+# Ruby can connect to various databases using appropriate gems.
+
+puts "=== 23. DATABASE INTEGRATION ==="
+
+# SQLite example (lightweight, file-based database)
+puts "SQLite Database Example:"
+begin
+  require 'sqlite3'
+
+  # Create in-memory database for demonstration
+  db = SQLite3::Database.new ":memory:"
+
+  # Create table
+  db.execute <<-SQL
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  SQL
+
+  # Insert sample data
+  users_data = [
+    ['Alice Johnson', 'alice@example.com'],
+    ['Bob Smith', 'bob@example.com'],
+    ['Charlie Brown', 'charlie@example.com']
+  ]
+
+  users_data.each do |name, email|
+    db.execute("INSERT INTO users (name, email) VALUES (?, ?)", [name, email])
+  end
+
+  # Query data
+  puts "Users in database:"
+  db.execute("SELECT id, name, email FROM users") do |row|
+    puts "ID: #{row[0]}, Name: #{row[1]}, Email: #{row[2]}"
+  end
+
+  # Update data
+  db.execute("UPDATE users SET name = ? WHERE id = ?", ['Alice Cooper', 1])
+
+  # Delete data
+  db.execute("DELETE FROM users WHERE id = ?", [3])
+
+  puts "After updates:"
+  db.execute("SELECT COUNT(*) FROM users") do |row|
+    puts "Total users: #{row[0]}"
+  end
+
+rescue LoadError
+  puts "SQLite3 gem not available. Install with: gem install sqlite3"
+end
+puts ""
+
+# PostgreSQL example (production-ready database)
+puts "PostgreSQL Connection Example:"
+begin
+  require 'pg'
+
+  # Note: This would connect to a real PostgreSQL database
+  # For demonstration, we'll show the connection pattern
+  puts "PostgreSQL connection pattern:"
+  puts <<-RUBY
+  require 'pg'
+
+  conn = PG.connect(
+    host: 'localhost',
+    dbname: 'myapp_development',
+    user: 'postgres',
+    password: 'your_password'
+  )
+
+  # Execute queries
+  result = conn.exec("SELECT * FROM users")
+  result.each do |row|
+    puts row['name']
+  end
+
+  conn.close
+  RUBY
+
+rescue LoadError
+  puts "pg gem not available. Install with: gem install pg"
+end
+puts ""
+
+# ==========================================
+# 24. API INTEGRATION
+# ==========================================
+# Ruby can consume and create APIs using various libraries.
+
+puts "=== 24. API INTEGRATION ==="
+
+# HTTP requests using Net::HTTP (built-in)
+puts "HTTP API Example with Net::HTTP:"
+require 'net/http'
+require 'json'
+
+begin
+  # GET request to JSONPlaceholder API
+  uri = URI('https://jsonplaceholder.typicode.com/posts/1')
+  response = Net::HTTP.get(uri)
+
+  if response
+    post = JSON.parse(response)
+    puts "API Response:"
+    puts "Post ID: #{post['id']}"
+    puts "Title: #{post['title']}"
+    puts "Body: #{post['body'][0..50]}..."
+  end
+
+rescue => e
+  puts "API request failed: #{e.message}"
+end
+puts ""
+
+# REST API creation with Sinatra pattern
+puts "REST API Creation Pattern:"
+puts <<-RUBY
+require 'sinatra'
+require 'json'
+
+# In-memory data store
+todos = [
+  {id: 1, title: 'Learn Ruby', completed: false},
+  {id: 2, title: 'Build API', completed: true}
+]
+
+# GET /todos - List all todos
+get '/todos' do
+  content_type :json
+  todos.to_json
+end
+
+# GET /todos/:id - Get specific todo
+get '/todos/:id' do
+  content_type :json
+  todo = todos.find { |t| t[:id] == params[:id].to_i }
+  todo ? todo.to_json : {error: 'Todo not found'}.to_json
+end
+
+# POST /todos - Create new todo
+post '/todos' do
+  content_type :json
+  data = JSON.parse(request.body.read)
+  new_todo = {
+    id: todos.length + 1,
+    title: data['title'],
+    completed: false
+  }
+  todos << new_todo
+  new_todo.to_json
+end
+
+# PUT /todos/:id - Update todo
+put '/todos/:id' do
+  content_type :json
+  todo = todos.find { |t| t[:id] == params[:id].to_i }
+  if todo
+    data = JSON.parse(request.body.read)
+    todo.merge!(data)
+    todo.to_json
+  else
+    {error: 'Todo not found'}.to_json
+  end
+end
+
+# DELETE /todos/:id - Delete todo
+delete '/todos/:id' do
+  content_type :json
+  todo = todos.find { |t| t[:id] == params[:id].to_i }
+  if todo
+    todos.delete(todo)
+    {message: 'Todo deleted'}.to_json
+  else
+    {error: 'Todo not found'}.to_json
+  end
+end
+RUBY
+puts ""
+
+# ==========================================
+# 25. FRONTEND INTEGRATION
+# ==========================================
+# Ruby backends can serve frontend applications or work with separate frontends.
+
+puts "=== 25. FRONTEND INTEGRATION ==="
+
+# ERB template example (Embedded Ruby)
+puts "ERB Template Example:"
+template = <<-ERB
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= @page_title %></title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .user { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1><%= @page_title %></h1>
+  <p>Welcome to our Ruby-powered website!</p>
+
+  <h2>Users</h2>
+  <% @users.each do |user| %>
+    <div class="user">
+      <strong><%= user[:name] %></strong>
+      <p><%= user[:email] %></p>
+      <small>Member since: <%= user[:created_at] %></small>
+    </div>
+  <% end %>
+
+  <script>
+    console.log('This page was generated by Ruby!');
+  </script>
+</body>
+</html>
+ERB
+
+# Simulate template rendering
+puts "Sample HTML output from ERB template:"
+puts "<!DOCTYPE html>"
+puts "<html><head><title>Ruby Web App</title></head>"
+puts "<body><h1>Ruby Web App</h1>"
+puts "<p>This page demonstrates Ruby backend serving HTML.</p>"
+puts "</body></html>"
+puts ""
+
+# JSON API for frontend consumption
+puts "JSON API for Frontend Integration:"
+api_response = {
+  status: "success",
+  data: {
+    users: [
+      {id: 1, name: "Alice", email: "alice@example.com"},
+      {id: 2, name: "Bob", email: "bob@example.com"}
+    ],
+    pagination: {
+      page: 1,
+      per_page: 10,
+      total: 2
+    }
+  },
+  timestamp: Time.now.iso8601
+}
+
+puts "API Response for frontend:"
+puts JSON.pretty_generate(api_response)
+puts ""
+
+# CORS headers example
+puts "CORS Headers for Frontend Integration:"
+cors_headers = {
+  "Access-Control-Allow-Origin" => "*",
+  "Access-Control-Allow-Methods" => "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers" => "Content-Type, Authorization",
+  "Content-Type" => "application/json"
+}
+
+puts "CORS headers:"
+cors_headers.each do |key, value|
+  puts "#{key}: #{value}"
+end
+puts ""
+
+# ==========================================
+# 26. WEB DEVELOPMENT WITH SINATRA
+# ==========================================
+# Sinatra is a lightweight web framework for Ruby.
+
+puts "=== 26. WEB DEVELOPMENT WITH SINATRA ==="
+
+puts "Sinatra Web Application Example:"
+puts <<-RUBY
+require 'sinatra'
+
+# Basic route
+get '/' do
+  'Hello World!'
+end
+
+# Route with parameters
+get '/hello/:name' do
+  "Hello, \#{params[:name]}!"
+end
+
+# Route with query parameters
+get '/search' do
+  query = params[:q]
+  "Searching for: \#{query}"
+end
+
+# POST route
+post '/users' do
+  # Parse JSON body
+  data = JSON.parse(request.body.read)
+  "Created user: \#{data['name']}"
+end
+
+# Template rendering
+get '/page' do
+  @title = "My Page"
+  @items = ['Apple', 'Banana', 'Cherry']
+  erb :page
+end
+
+# Static file serving
+set :static, true
+set :public_folder, 'public'
+
+# Error handling
+error 404 do
+  'Page not found'
+end
+
+# Before filter
+before do
+  puts "Request: \#{request.path}"
+end
+
+# After filter
+after do
+  puts "Response sent"
+end
+RUBY
+puts ""
+
+# ==========================================
+# 27. BACKGROUND JOBS AND CONCURRENCY
+# ==========================================
+# Ruby supports concurrent and parallel execution.
+
+puts "=== 27. BACKGROUND JOBS AND CONCURRENCY ==="
+
+# Thread example
+puts "Thread Example:"
+threads = []
+
+3.times do |i|
+  threads << Thread.new do
+    sleep(rand(1..3))
+    puts "Thread #{i} finished"
+  end
+end
+
+threads.each(&:join)
+puts "All threads completed"
+puts ""
+
+# Fiber example (lightweight concurrency)
+puts "Fiber Example:"
+fiber = Fiber.new do
+  puts "Fiber: Step 1"
+  Fiber.yield
+  puts "Fiber: Step 2"
+  Fiber.yield
+  puts "Fiber: Step 3"
+end
+
+fiber.resume
+puts "Main: Between steps"
+fiber.resume
+puts "Main: After second step"
+fiber.resume
+puts "Main: All done"
+puts ""
+
+# ==========================================
+# 28. TESTING
+# ==========================================
+# Ruby has excellent testing frameworks.
+
+puts "=== 28. TESTING ==="
+
+puts "MiniTest Example:"
+puts <<-RUBY
+require 'minitest/autorun'
+
+class CalculatorTest < Minitest::Test
+  def setup
+    @calc = Calculator.new
+  end
+
+  def test_addition
+    assert_equal 4, @calc.add(2, 2)
+  end
+
+  def test_subtraction
+    assert_equal 0, @calc.subtract(2, 2)
+  end
+
+  def test_division_by_zero
+    assert_raises(ZeroDivisionError) { @calc.divide(10, 0) }
+  end
+end
+RUBY
+puts ""
+
+puts "RSpec Example:"
+puts <<-RUBY
+require 'rspec'
+
+describe Calculator do
+  let(:calc) { Calculator.new }
+
+  describe '#add' do
+    it 'adds two numbers' do
+      expect(calc.add(2, 3)).to eq(5)
+    end
+
+    it 'handles negative numbers' do
+      expect(calc.add(-1, 1)).to eq(0)
+    end
+  end
+
+  describe '#multiply' do
+    it 'multiplies two numbers' do
+      expect(calc.multiply(3, 4)).to eq(12)
+    end
+  end
+end
+RUBY
+puts ""
+
+# ==========================================
 # CONCLUSION
 # ==========================================
 puts "=== CONCLUSION ==="
-puts "Congratulations! You've completed the Ruby basics to advanced tutorial."
+puts "Congratulations! You've completed the comprehensive Ruby tutorial."
+puts "This tutorial covered:"
+puts "- Ruby basics to advanced concepts"
+puts "- Project creation and structure"
+puts "- Database integration (SQLite, PostgreSQL)"
+puts "- API creation and consumption"
+puts "- Frontend integration"
+puts "- Web development with Sinatra"
+puts "- Concurrency and background jobs"
+puts "- Testing frameworks"
+puts ""
 puts "Ruby is a powerful, flexible language with a rich ecosystem."
 puts "Key takeaways:"
 puts "- Everything is an object"
@@ -752,5 +1250,11 @@ puts "- Duck typing: If it walks like a duck and quacks like a duck, it's a duck
 puts "- Convention over configuration"
 puts "- There are many ways to do things, but some are more Ruby-like than others"
 puts ""
-puts "Happy coding with Ruby!"
+puts "Next steps:"
+puts "1. Build your first Ruby project"
+puts "2. Explore Rails for web development"
+puts "3. Learn about Ruby gems and contribute to open source"
+puts "4. Join the Ruby community"
+puts ""
+puts "Happy coding with Ruby! 💎"
 
